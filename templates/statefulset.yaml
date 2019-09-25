@@ -1,0 +1,59 @@
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: {{ template "elasticsearch2.fullname" . }}
+  labels:
+    app: {{ template "elasticsearch2.name" . }}
+    chart: {{ template "elasticsearch2.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  serviceName: {{ template "elasticsearch2.name" . }}
+  selector:
+    matchLabels:
+      app: {{ template "elasticsearch2.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "elasticsearch2.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: api
+              containerPort: {{ .Values.service.apiport }}
+              protocol: TCP
+            - name: transport
+              containerPort: {{ .Values.service.transportport }}
+              protocol: TCP
+          volumeMounts:
+            - name: {{ template "elasticsearch2.fullname" . }}-data
+              mountPath: "/usr/share/elasticsearch/data"
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: {{ template "elasticsearch2.fullname" . }}-data
+    spec:
+      accessModes: {{ .Values.storage.accessModes }}
+      storageClassName: {{ .Values.storage.storageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.storage.capacity }}
