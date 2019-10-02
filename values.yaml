@@ -17,6 +17,9 @@ image:
 service:
   type: ClusterIP
 
+ingress:
+  host: kooper.dyn.ncsa.edu
+
 
 # TODO: abstract configmap contents here to easily allow for customization
 elasticsearch.yml:

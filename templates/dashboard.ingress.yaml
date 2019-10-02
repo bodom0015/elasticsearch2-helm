@@ -9,11 +9,21 @@ metadata:
     heritage: {{ .Release.Service }}
     component: "elastichq"
 spec:
+  # FIXME: These rules will almost certainly conflict with another service (e.g. /api conflicts with Clowder)
+  # Recommend either wildcard DNS or a distinct hostname (e.g. elastic.kooper.dyn.ncsa.edu) pointing to the same IP.
   rules:
-  - host: kooper.dyn.ncsa.edu
+  - host: {{ .Values.ingress.host }}
     http:
       paths:
-      - path: /static
+      - path: /api/
+        backend:
+          serviceName: "{{ template "elasticsearch2.fullname" . }}-elastichq"
+          servicePort: "ui"
+      - path: /favicon.ico
+        backend:
+          serviceName: "{{ template "elasticsearch2.fullname" . }}-elastichq"
+          servicePort: "ui"
+      - path: /static/
         backend:
           serviceName: "{{ template "elasticsearch2.fullname" . }}-elastichq"
           servicePort: "ui"

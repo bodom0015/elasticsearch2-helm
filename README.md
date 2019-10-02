@@ -113,10 +113,21 @@ $ kubectl logs -f es2-elasticsearch2-0
 [2019-10-02 03:42:16,933][INFO ][cluster.service          ] [Joe Fixit] added {{Right-Winger}{RxiYhWrOTpyUG-M1GWRnkQ}{172.17.0.6}{172.17.0.6:9300},}, reason: zen-disco-join(join from node[{Right-Winger}{RxiYhWrOTpyUG-M1GWRnkQ}{172.17.0.6}{172.17.0.6:9300}])
 ```
 
+### Monitoring
+ElasticHQ is also deployed alongside your cluster to monitor and administer it.
+
+The UI can be accessed by navigating your browser to the hostname configured as `ingress.host` in your `values.yaml`.
+
+You will be prompted by ElasticHQ for the hostname of your cluster, for which you should use the following format:
+```
+http://es2-elasticsearch2-api:9200
+```
+
+NOTE: If you used a different `--name` besides `es2` for your Helm release, that name will need to be substituted in for `es2` in the above formatted string.
+
 ## TODOs
 
-* Script to generate secrets (are there secrets?)
-* Document configuration options
-* Test sharding / scaling-up additional replicas
-* Abstract ConfigMap contents to `values.yaml`
 * Pod anti-affinity
+* Abstract ConfigMap contents to `values.yaml`
+* Document configuration options
+* Test sharding / additional replicas
