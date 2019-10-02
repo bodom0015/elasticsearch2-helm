@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "elasticsearch2.fullname" . }}
+  labels:
+    app: {{ template "elasticsearch2.name" . }}
+    chart: {{ template "elasticsearch2.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  elasticsearch.yml: |
+    cluster.name: {{ template "elasticsearch2.fullname" . }}
+    network.host: _local_, _site_
+    discovery.zen.ping.unicast.hosts: "{{ template "elasticsearch2.fullname" . }}-discovery"
+    http.cors.allow-origin: "*"
+    http.cors.enabled: true
+    path.data: "/usr/share/elasticsearch/data"
+    path.logs: "/var/log/elasticsearch/logs"
+
+  # TODO
+  #discovery.zen.minimum_master_nodes: 2 # ${NODE_QUORUM}
+  #discovery.zen.unicast.hosts:
+  #- 172.17.0.5
+  #- 172.17.0.6
+  #node.name: terra-es-1-es-01

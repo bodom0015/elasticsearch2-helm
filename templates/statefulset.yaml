@@ -20,18 +20,25 @@ spec:
         app: {{ template "elasticsearch2.name" . }}
         release: {{ .Release.Name }}
     spec:
+      volumes:
+        - name: es-config
+          configMap:
+            name: {{ template "elasticsearch2.fullname" . }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: api
-              containerPort: {{ .Values.service.apiport }}
+              containerPort: 9200
               protocol: TCP
             - name: transport
-              containerPort: {{ .Values.service.transportport }}
+              containerPort: 9300
               protocol: TCP
           volumeMounts:
+            - name: es-config
+              mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+              subPath: elasticsearch.yml
             - name: {{ template "elasticsearch2.fullname" . }}-data
               mountPath: "/usr/share/elasticsearch/data"
           resources:
