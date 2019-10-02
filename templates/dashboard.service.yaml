@@ -1,21 +1,21 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ template "elasticsearch2.fullname" . }}-api"
+  name: "{{ template "elasticsearch2.fullname" . }}-elastichq"
   labels:
     app: {{ template "elasticsearch2.name" . }}
     chart: {{ template "elasticsearch2.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-    component: "elasticsearch"
+    component: "elastichq"
 spec:
   type: ClusterIP
   ports:
-    - port: 9200
-      targetPort: api
+    - port: 5000
+      targetPort: ui
       protocol: TCP
-      name: api
+      name: ui
   selector:
     app: {{ template "elasticsearch2.name" . }}
     release: {{ .Release.Name }}
-    component: "elasticsearch"
+    component: "elastichq"

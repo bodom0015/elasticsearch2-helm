@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: "{{ template "elasticsearch2.fullname" . }}-elastichq"
+  labels:
+    app: {{ template "elasticsearch2.name" . }}
+    chart: {{ template "elasticsearch2.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: "elastichq"
+spec:
+  rules:
+  - host: kooper.dyn.ncsa.edu
+    http:
+      paths:
+      - path: /static
+        backend:
+          serviceName: "{{ template "elasticsearch2.fullname" . }}-elastichq"
+          servicePort: "ui"
+      - path: /elastic
+        backend:
+          serviceName: "{{ template "elasticsearch2.fullname" . }}-elastichq"
+          servicePort: "ui"

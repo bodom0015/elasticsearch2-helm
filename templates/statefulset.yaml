@@ -7,6 +7,7 @@ metadata:
     chart: {{ template "elasticsearch2.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+    component: "elasticsearch"
 spec:
   replicas: {{ .Values.replicaCount }}
   serviceName: {{ template "elasticsearch2.name" . }}
@@ -14,11 +15,13 @@ spec:
     matchLabels:
       app: {{ template "elasticsearch2.name" . }}
       release: {{ .Release.Name }}
+      component: "elasticsearch"
   template:
     metadata:
       labels:
         app: {{ template "elasticsearch2.name" . }}
         release: {{ .Release.Name }}
+        component: "elasticsearch"
     spec:
       volumes:
         - name: es-config

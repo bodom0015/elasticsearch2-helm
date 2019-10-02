@@ -9,6 +9,7 @@ metadata:
     chart: {{ template "elasticsearch2.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+    component: "elasticsearch"
 spec:
   clusterIP: None
   type: {{ .Values.service.type }}
@@ -21,3 +22,4 @@ spec:
   selector:
     app: {{ template "elasticsearch2.name" . }}
     release: {{ .Release.Name }}
+    component: "elasticsearch"
