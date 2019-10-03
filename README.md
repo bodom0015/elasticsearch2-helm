@@ -140,12 +140,17 @@ $ kubectl logs -f es2-elasticsearch2-0
 ### Monitoring
 Using this chart, ElasticHQ is also deployed alongside your cluster to monitor and administer it.
 
-The UI can be accessed by navigating your browser to the hostname configured as `ingress.host` in your `values.yaml`.
+The UI can be accessed by navigating your browser to the `/elastic` path of the hostname configured as `ingress.host` in your `values.yaml`. By default, this should be http://kooper.dyn.ncsa.edu/elastic.
 
-You will be prompted by ElasticHQ for the hostname of your cluster, for which you should use the following format:
+You will be prompted by ElasticHQ to "Connect" to a cluster by hostname, which should be automatically populated with:
 ```
 http://es2-elasticsearch2-api:9200
 ```
 
+Press "Connect" to access the Monitoring interface.
+
+You should see your cluster listed at the top list, along with a red/yellow/green indicator for cluster health. At the top-right, you should see a `Nodes` dropdown containing each of your elasticsearch nodes as well as further links containing verbose details about each node.
+
 NOTE: If you used a different `--name` besides `es2` for your Helm release, that name will need to be substituted in for `es2` in the above formatted string.
+
 
