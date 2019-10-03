@@ -7,16 +7,38 @@ Please consider using a newer version of Elasticsearch along with the official H
 
 Previous versions of the Helm chart can also be found here: https://github.com/helm/charts/tree/master/stable/elasticsearch
 
+
 ## Approach
 Uses a Kubernetes [headless service](https://kubernetes.io/docs/concepts/services-networking/service/#headless-services) to discover additional nodes. This service needs some special configuration to tell Kubernetes not to allocate an IP for it and to create and publish endpoints even if things are not in a ready state. This is necessary since ES2 needs to discover during startup, at which point one or more containers may not yet be ready.
 
 Inspired by the approach recommended by the now-defunct [elasticsearch-cloud-kubernetes](https://github.com/fabric8io/elasticsearch-cloud-kubernetes#kubernetes-cloud-plugin-for-elasticsearch) by Fabric8IO.
 
-## How to Test
 
-### The Setup
+## Configuration
 
-1. Install minikube binary and run `minikube start`
+Below are the supported configuration options that can be overridden or customized in `values.yaml`:
+
+| Key | Description | Default Value |
+| --- | --- | --- |
+| `replicaCount` | The initial number of elasticsearch containers that will make up the cluster | `1` |
+| `storage.accessModes` | The access mode with which to mount elasticsearch data | `[ "ReadWriteOnce" ]` |
+| `storage.storageClass` | The storage class to use to provision the elasticsearch data PVC | (empty - use cluster default) |
+| `storage.capacity` | The size of the PVC to provision for elasticsearch data | `1Gi` |
+| `image.repository` | The Docker image repo/name to run | `elasticsearch` |
+| `image.tag` | The Docker image tag to run | `2` |
+| `image.pullPolicy` | The Docker image pullPolicy to use when running | `IfNotPresent` |
+| `ingress.enabled` | Whether an ingress rule should be deployed for ElasticHQ | `true` |
+| `ingress.host` | The hostname to use for the ingress rule | `kooper.dyn.ncsa.edu` |
+| `elasticsearch.config` | Additional configuration to pass into [`elasticsearch.yml`](https://www.elastic.co/guide/en/elasticsearch/reference/2.4/setup-configuration.html#settings) | (config block) |
+| `resources` | [Resource limits](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/) that should be applied to elasticsearch instances | None |
+| `nodeSelector` | [Node selector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector) that should be applied to elasticsearch instances | None |
+| `tolerations` | [Tolerations](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/) that should be applied to elasticsearch instances | None |
+| `affinity` | [Affinity](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity) that should be applied to elasticsearch instances | None |
+
+
+## The Setup
+
+1. Install minikube binary and run `minikube start` (or use your own preferred method of getting a Kubernetes cluster up and running)
 2. Install helm client and run `helm init` (this will run Tiller on your minikube cluster)
 3. Clone this repository:`git clone https://github.com/bodom0015/elasticsearch2-helm && cd elasticsearch2-helm`
 4. Modify parameters as desired: `vi values.yaml`
@@ -24,11 +46,11 @@ Inspired by the approach recommended by the now-defunct [elasticsearch-cloud-kub
 
 By default, 1 replica will be deployed and will become the master:
 ```bash
-$ helm upgrade --install es2 .
+$ helm upgrade --install es2 --namespace=elastic .
 Release "es2" does not exist. Installing it now.
 NAME:   es2
 LAST DEPLOYED: Tue Oct  1 22:40:17 2019
-NAMESPACE: default
+NAMESPACE: elastic
 STATUS: DEPLOYED
 
 RESOURCES:
@@ -50,7 +72,7 @@ NAME                DESIRED  CURRENT  AGE
 es2-elasticsearch2  1        1        1s
 
 
-$ kubectl logs -f es2-elasticsearch2-0
+$ kubectl logs -f es2-elasticsearch2-0 -n elastic
 [2019-10-02 03:40:29,517][INFO ][node                     ] [Joe Fixit] version[2.4.6], pid[1], build[5376dca/2017-07-18T12:17:44Z]
 [2019-10-02 03:40:29,521][INFO ][node                     ] [Joe Fixit] initializing ...
 [2019-10-02 03:40:35,412][INFO ][plugins                  ] [Joe Fixit] modules [reindex, lang-expression, lang-groovy], plugins [], sites []
@@ -66,20 +88,21 @@ $ kubectl logs -f es2-elasticsearch2-0
 [2019-10-02 03:41:04,725][INFO ][gateway                  ] [Joe Fixit] recovered [0] indices into cluster_state
 ```
 
-### The Scale-Up
+
+## The Scale-Up
 Scale up to 2 replicas by running the following:
 ```bash
-kubectl scale statefulset es2-elasticsearch2 --replicas=2 --current-replicas=1
+kubectl scale statefulset es2-elasticsearch2 -n elastic --replicas=2 --current-replicas=1
 ```
 
 This will create a second replica pod that will automatically join the cluster once it comes online:
 ```bash
-$ kubectl get pods
+$ kubectl get pods -n elastic
 NAME                   READY   STATUS    RESTARTS   AGE
 es2-elasticsearch2-0   1/1     Running   0          13m
 es2-elasticsearch2-1   1/1     Running   0          12m
 
-$ kubectl logs -f es2-elasticsearch2-1
+$ kubectl logs -f es2-elasticsearch2-1 -n elastic
 [2019-10-02 03:41:50,625][INFO ][node                     ] [Right-Winger] version[2.4.6], pid[1], build[5376dca/2017-07-18T12:17:44Z]
 [2019-10-02 03:41:50,628][INFO ][node                     ] [Right-Winger] initializing ...
 [2019-10-02 03:41:54,408][INFO ][plugins                  ] [Right-Winger] modules [reindex, lang-expression, lang-groovy], plugins [], sites []
@@ -113,8 +136,9 @@ $ kubectl logs -f es2-elasticsearch2-0
 [2019-10-02 03:42:16,933][INFO ][cluster.service          ] [Joe Fixit] added {{Right-Winger}{RxiYhWrOTpyUG-M1GWRnkQ}{172.17.0.6}{172.17.0.6:9300},}, reason: zen-disco-join(join from node[{Right-Winger}{RxiYhWrOTpyUG-M1GWRnkQ}{172.17.0.6}{172.17.0.6:9300}])
 ```
 
+
 ### Monitoring
-ElasticHQ is also deployed alongside your cluster to monitor and administer it.
+Using this chart, ElasticHQ is also deployed alongside your cluster to monitor and administer it.
 
 The UI can be accessed by navigating your browser to the hostname configured as `ingress.host` in your `values.yaml`.
 
@@ -125,9 +149,3 @@ http://es2-elasticsearch2-api:9200
 
 NOTE: If you used a different `--name` besides `es2` for your Helm release, that name will need to be substituted in for `es2` in the above formatted string.
 
-## TODOs
-
-* Pod anti-affinity
-* Abstract ConfigMap contents to `values.yaml`
-* Document configuration options
-* Test sharding / additional replicas

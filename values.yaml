@@ -6,7 +6,6 @@ replicaCount: 1
 
 storage:
   accessModes: [ "ReadWriteOnce" ]
-  storageClass: "nfs-client"
   capacity: 1Gi
 
 image:
@@ -14,31 +13,44 @@ image:
   tag: 2
   pullPolicy: IfNotPresent
 
-service:
-  type: ClusterIP
-
+# Whether we should create an ingress rule for the elastichq dashboard
 ingress:
+  enabled: true
   host: kooper.dyn.ncsa.edu
 
+# Drop-in values for elasticsearch.yml config file:
+elasticsearch:
+  config:
+    cluster.name: "clowder"
+    path.data: "/usr/share/elasticsearch/data"
+    path.logs: "/usr/share/elasticsearch/logs"
+    #discovery.zen.minimum_master_nodes: 2 # ${NODE_QUORUM}
+    #node.name: terra-es-1-es-01
 
-# TODO: abstract configmap contents here to easily allow for customization
-elasticsearch.yml:
-  
 
 resources:
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  limits:
-    cpu: 750m
-    memory: 512Mi
-  requests:
-    cpu: 250m
-    memory: 256Mi
+  #limits:
+  #  cpu: 750m
+  #  memory: 512Mi
+  #requests:
+  #  cpu: 250m
+  #  memory: 256Mi
 
 nodeSelector: {}
 
 tolerations: []
 
-affinity: {}
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: "component"
+              operator: In
+              values:
+              - elasticsearch
+        topologyKey: "kubernetes.io/hostname"

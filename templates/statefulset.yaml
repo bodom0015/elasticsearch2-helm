@@ -63,7 +63,9 @@ spec:
       name: {{ template "elasticsearch2.fullname" . }}-data
     spec:
       accessModes: {{ .Values.storage.accessModes }}
+      {{- with .Values.storage.storageClass }}
       storageClassName: {{ .Values.storage.storageClass }}
+      {{- end }}
       resources:
         requests:
           storage: {{ .Values.storage.capacity }}
